@@ -2,8 +2,6 @@
 
 A search server for OpenMM molecular dynamics simulation documentation. This server complies with the Model Context Protocol (MCP) and is optimized for integration with LLMs.
 
-> 🌐 **Language/言語**: [English](README.md) | [日本語](README_ja.md)
-
 ## Overview
 
 This server vectorizes OpenMM documentation and makes it searchable. Users can send queries to find relevant document sections. It uses FAISS vector database to achieve fast search capabilities.
