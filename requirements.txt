@@ -1,0 +1,8 @@
+langchain>=0.0.335
+langchain-community>=0.0.14
+langchain-core>=0.1.13
+faiss-cpu>=1.7.4
+sentence-transformers>=2.2.2
+huggingface-hub>=0.19.4
+torch>=2.0.0
+transformers>=4.35.0
