@@ -1,36 +1,25 @@
 # OpenMM Documentation MCP Server
 
-A search server for OpenMM molecular dynamics simulation documentation. This server complies with the Model Context Protocol (MCP) and is optimized for integration with LLMs.
+A Model Context Protocol (MCP) server for searching OpenMM molecular dynamics simulation documentation. This server vectorizes documentation and provides semantic search capabilities optimized for integration with large language models (LLMs).
 
 > 🌐 **Language/言語**: [English](README.md) | [日本語](README_ja.md)
 
 ## Overview
 
-This server vectorizes OpenMM documentation and makes it searchable. Users can send queries to find relevant document sections. It uses FAISS vector database to achieve fast search capabilities.
+This MCP server allows natural language search through OpenMM documentation. It encodes documentation content into vector embeddings using modern language models and stores them in a FAISS vector database for efficient retrieval. When a query is received, the server finds the most semantically relevant documentation sections and returns them, making it particularly useful for:
 
-OpenMM is a high-performance simulation library for biological molecular systems, and this server makes it easier to search through its documentation. It's particularly useful for:
-
-- Searching for documentation on specific molecular dynamics methods
-- Finding usage instructions for OpenMM functions and classes
-- Retrieving information about simulation parameter settings
+- Finding relevant documentation on molecular dynamics methods
+- Searching for usage instructions of OpenMM functions and classes
+- Retrieving information about simulation parameters and settings
+- Getting code examples and implementation details
 
 ## Features
 
-- Document Search: Find relevant documents based on natural language queries
-- Index Information: Retrieve information about the vector database
-- MCP Compliant: Optimized for AI/LLM integration
-- Fast Search: Efficient vector search using FAISS
-- Flexible Queries: Support for both Japanese and English queries
-
-## Technology Stack
-
-This project uses the following key technologies:
-
-- **FastAPI**: REST API implementation
-- **FAISS**: Efficient vector search indexing
-- **LangChain**: Document processing and LLM integration
-- **HuggingFace Models**: Document embedding generation
-- **Pytest**: Test automation
+- **Semantic Search**: Find documentation based on meaning, not just keywords
+- **MCP Integration**: Fully compatible with Claude Desktop and other MCP-enabled applications
+- **Multi-language Support**: Process queries in both English and Japanese
+- **Efficient Retrieval**: Uses FAISS for high-performance vector similarity search
+- **Customizable**: Configurable embedding models and search parameters
 
 ## Setup
 
@@ -40,24 +29,6 @@ This project uses the following key technologies:
 - `uv` package manager (recommended) or `pip`
 - Minimum 8GB RAM (16GB+ recommended for index creation)
 
-### Required Packages
-
-Main dependencies:
-
-```
-fastapi==0.110.0
-uvicorn==0.28.0
-faiss-cpu==1.8.0
-langchain==0.1.12
-langchain-community==0.0.29
-langchain-text-splitters==0.0.1
-sentence-transformers==2.5.1
-pydantic==2.6.4
-pytest==8.3.5
-```
-
-All dependencies are listed in the `requirements.txt` file.
-
 ### Installation
 
 ```bash
@@ -65,41 +36,22 @@ All dependencies are listed in the `requirements.txt` file.
 git clone https://github.com/yourusername/openMM-Doc-MCP.git
 cd openMM-Doc-MCP
 
-# Create and activate virtual environment (using uv)
+# Create and activate virtual environment using uv
 uv venv
 
-# Install packages with uv (recommended)
+# Install dependencies with uv (recommended)
 uv pip install -r requirements.txt
 
 # Or, if using pip
 # python -m venv .venv
-# source .venv/bin/activate  # For Linux
+# source .venv/bin/activate  # For Linux/macOS
 # .venv\Scripts\activate     # For Windows
 # pip install -r requirements.txt
 ```
 
-### Environment Configuration
-
-You can set environment variables as needed:
-
-```bash
-# Set server port (default is 8080)
-export MCP_SERVER_PORT=8888
-
-# Set index directory (optional)
-export MCP_INDEX_DIR="/path/to/custom/index"
-```
-
-For Windows environment variables:
-
-```
-set MCP_SERVER_PORT=8888
-set MCP_INDEX_DIR=C:\path\to\custom\index
-```
-
 ### Creating the Index
 
-To create an index of the documents, run the following command:
+Before using the server, you need to create a vector index of the OpenMM documentation:
 
 ```bash
 uv run python create_faiss_index.py
@@ -118,7 +70,26 @@ uv run python create_faiss_index.py --output_dir "/path/to/output"
 uv run python create_faiss_index.py --embedding_model "intfloat/multilingual-e5-large"
 ```
 
-Index creation may take time. The process uses significant system resources (especially memory). By default, index files are created in the `data/indices/docs/` directory.
+Index creation may take some time and requires significant memory. By default, index files are created in the `data/indices/docs/` directory.
+
+### Configuration
+
+You can configure the server using environment variables:
+
+```bash
+# Set server port (default is 8080)
+export MCP_SERVER_PORT=8888
+
+# Set index directory (optional)
+export MCP_INDEX_DIR="/path/to/custom/index"
+```
+
+For Windows:
+
+```
+set MCP_SERVER_PORT=8888
+set MCP_INDEX_DIR=C:\path\to\custom\index
+```
 
 ## Usage
 
@@ -130,64 +101,80 @@ uv run python server.py
 
 By default, the server listens at http://localhost:8080.
 
-### Executing Queries
+### Command-line Search
 
-To search directly from the command line:
+You can directly search from the command line:
 
 ```bash
-uv run python search_molecular_simulation.py "basic principles of molecular dynamics"
+uv run python search_molecular_simulation.py "how to set up a water box simulation"
 ```
 
-Or you can send an HTTP request:
+### HTTP Requests
+
+You can also send HTTP requests to the server:
 
 ```
 POST http://localhost:8080/query
 Content-Type: application/json
 
 {
-  "query": "basic principles of molecular dynamics",
+  "query": "how to set up a water box simulation",
   "top_k": 5
 }
 ```
 
-## Testing
+## Claude Desktop Integration
 
-This project includes tests for the vector database and MCP server.
+### Setting up with Claude Desktop
 
-### Running Tests
+Edit the Claude Desktop configuration file to add this MCP server. The configuration file path is:
 
-To run all tests:
+- **macOS**:
+  `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**:
+  `%APPDATA%\Claude\claude_desktop_config.json`
 
-```bash
-uv run -m pytest
+Add the following JSON configuration (within the existing `mcpServers` object):
+
+```json
+{
+  "mcpServers": {
+    "OpenMM Documentation": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp[cli]",
+        "--with",
+        "faiss-cpu",
+        "--with",
+        "langchain",
+        "--with",
+        "sentence-transformers",
+        "mcp",
+        "run",
+        "/path/to/openMM-Doc-MCP/server.py"
+      ]
+    }
+  }
+}
 ```
 
-To run specific tests:
+Notes:
+- If the `uv` command is not in your environment path, use an absolute path (e.g.: `/path/to/uv`).
+- Replace `/path/to/openMM-Doc-MCP/server.py` with the absolute path to this script.
+- Always use absolute paths, not relative paths.
 
-```bash
-# Run only server tests
-uv run -m pytest tests/test_server.py
+### Troubleshooting Claude Desktop Connection
 
-# Run vector database tests
-uv run -m pytest src/vector_db/tests/
-```
+If Claude Desktop cannot connect to the MCP server:
 
-Add the `-v` option for detailed output:
+1. Verify that the path to `server.py` in the configuration file is correct (absolute path)
+2. Make sure `uv` is properly installed and accessible
+3. Check system logs for any errors
+4. Try restarting Claude Desktop after making changes to the configuration
 
-```bash
-uv run -m pytest tests/test_server.py -v
-```
-
-### Test Structure
-
-- `tests/test_server.py`: MCP server functionality tests
-- `src/vector_db/tests/`: Vector database related tests
-  - `test_indexer.py`: Indexer tests
-  - `test_retriever.py`: Retriever tests
-
-## API Specification
-
-### MCP Integration
+## API Reference
 
 This server implements the Model Context Protocol (MCP) and provides the following tools:
 
@@ -205,45 +192,27 @@ This server implements the Model Context Protocol (MCP) and provides the followi
      - `index_path`: Optional custom path to FAISS index
    - Returns: Dictionary containing index information
 
-Detailed API specifications are available in the following files:
-- English: [specs/apispec_en.md](specs/apispec_en.md)
-- Japanese: [specs/apispec_ja.md](specs/apispec_ja.md)
+For detailed API specifications, see:
+- [specs/apispec_en.md](specs/apispec_en.md)
+- [specs/apispec_ja.md](specs/apispec_ja.md)
 
-## Claude Desktop Integration
+## Testing
 
-### Setting up with Claude Desktop
+This project includes tests for the vector database and MCP server.
 
-You can use this MCP server with Claude Desktop for enhanced document search capabilities:
+### Running Tests
 
-1. **Install Claude Desktop**: Download and install from [Anthropic's website](https://www.anthropic.com/claude)
+```bash
+# Run all tests
+uv run -m pytest
 
-2. **Start the MCP Server**:
-   ```bash
-   uv run python server.py
-   ```
+# Run specific tests
+uv run -m pytest tests/test_server.py
+uv run -m pytest src/vector_db/tests/
 
-3. **Configure Claude Desktop**:
-   - Open Claude Desktop
-   - Go to Settings (gear icon) > Advanced > MCP
-   - Enable MCP integration
-   - Add server with the following details:
-     - Name: OpenMM Documentation
-     - URL: http://localhost:8080
-   - Click "Add" and "Save"
-
-4. **Using with Claude**:
-   - Start a new conversation in Claude Desktop
-   - Claude will now have access to OpenMM documentation
-   - Ask questions like "Explain how to use OpenMM's force field parameters" or "How do I set up a molecular dynamics simulation in OpenMM?"
-
-### Troubleshooting Claude Desktop Connection
-
-If Claude Desktop cannot connect to the MCP server:
-
-1. Verify the server is running (`uv run python server.py`)
-2. Check that the URL is correctly entered in Claude Desktop settings
-3. Ensure no firewall is blocking the connection
-4. Try restarting Claude Desktop
+# Verbose output
+uv run -m pytest tests/test_server.py -v
+```
 
 ## Troubleshooting
 
@@ -265,7 +234,7 @@ If Claude Desktop cannot connect to the MCP server:
 
 ### Debugging
 
-To enable detailed logging, set the environment variable:
+To enable detailed logging:
 
 ```bash
 export DEBUG=true
@@ -285,61 +254,31 @@ uv run python server.py
 
 ### Latency Optimization
 
-- Use smaller indices
+- Use smaller embedding models for faster inference
 - Enable GPU acceleration with `faiss-gpu` (if you have compatible GPUs)
-- Adjust indexing parameters
+- Adjust chunk size and overlap parameters during indexing
 
 ### Memory Usage Optimization
 
-For processing large document collections, you can optimize memory usage with these settings:
+For processing large document collections:
 
-```python
+```bash
 # Adjust chunk size in create_faiss_index.py
---chunk_size 256  # default is 512
---chunk_overlap 20  # default is 50
+uv run python create_faiss_index.py --chunk_size 256 --chunk_overlap 20
 ```
-
-## Developer Information
-
-### Coding Conventions
-
-Please follow these coding conventions for this project:
-
-- PEP 8 style guide
-- Provide appropriate docstrings for functions and classes
-- Maintain test coverage
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Create a Pull Request
-
-### Extension Guide
-
-#### Adding New Vector Stores
-
-Currently using FAISS, but you can add other vector stores:
-
-1. Add a new indexer class in `src/vector_db/indexer.py`
-2. Add a corresponding retriever class in `src/vector_db/retriever.py`
-3. Create tests for the new indexer/retriever
-4. Make it selectable via environment variables or command line arguments
 
 ## Directory Structure
 
 ```
 openMM-Doc-MCP/
 ├── create_faiss_index.py   # Index creation script
-├── search_molecular_simulation.py # CLI search
+├── search_molecular_simulation.py # CLI search utility
 ├── server.py               # MCP server implementation
 ├── data/
 │   └── indices/
-│       └── docs/
+│       └── docs/           # Default location for index files
 │           ├── index.faiss # FAISS index file
-│           └── index.pkl   # Pickle index file
+│           └── index.pkl   # Metadata pickle file
 ├── specs/
 │   ├── apispec_en.md       # API specification (English)
 │   └── apispec_ja.md       # API specification (Japanese)
@@ -348,9 +287,6 @@ openMM-Doc-MCP/
 │       ├── indexer.py      # Indexer implementation
 │       ├── retriever.py    # Retriever implementation
 │       └── tests/          # Vector DB tests
-│           ├── conftest.py
-│           ├── test_indexer.py
-│           └── test_retriever.py
 └── tests/
     └── test_server.py      # Server tests
 ```
