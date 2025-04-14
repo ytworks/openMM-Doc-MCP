@@ -46,9 +46,9 @@ def main():
                         help="出力ディレクトリ")
     parser.add_argument("--index-name", type=str, default="docs",
                         help="インデックスの名前")
-    parser.add_argument("--chunk-size", type=int, default=500,
+    parser.add_argument("--chunk-size", type=int, default=100,
                         help="チャンクサイズ（文字数）")
-    parser.add_argument("--chunk-overlap", type=int, default=50,
+    parser.add_argument("--chunk-overlap", type=int, default=10,
                         help="チャンクオーバーラップ（文字数）")
     parser.add_argument("--embedding-model", type=str, 
                         default="intfloat/multilingual-e5-large",
