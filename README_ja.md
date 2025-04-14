@@ -185,76 +185,63 @@ uv run -m pytest tests/test_server.py -v
 
 ## API仕様
 
-### エンドポイント
+### MCP連携
 
-このサーバーは以下のAPIエンドポイントを提供しています：
+このサーバーはModel Context Protocol (MCP)を実装し、以下のツールを提供しています：
 
-1. **検索エンドポイント**
-   - URL: `/query`
-   - メソッド: POST
-   - リクエスト:
-     ```json
-     {
-       "query": "検索したいテキスト",
-       "top_k": 5,  // 省略可能、デフォルトは5
-       "index_path": "/path/to/index"  // 省略可能
-     }
-     ```
-   - レスポンス:
-     ```json
-     {
-       "query": "検索したいテキスト",
-       "results_count": 5,
-       "results": [
-         {
-           "content": "ドキュメントの内容...",
-           "metadata": {
-             "source": "ファイル名"
-           },
-           "score": 0.95
-         },
-         // ...他の結果
-       ],
-       "metadata": {
-         "top_k": 5,
-         "index_path": "/path/to/index"
-       }
-     }
-     ```
+1. **search_documents**
+   - クエリ文字列に基づいて類似ドキュメントを検索します
+   - パラメータ:
+     - `query`: 検索クエリテキスト（必須）
+     - `top_k`: 返される結果の数（デフォルト5）
+     - `index_path`: FAISSインデックスへのカスタムパス（オプション）
+   - 戻り値: 関連するドキュメントセクションを含む検索結果の辞書
 
-2. **インデックス情報エンドポイント**
-   - URL: `/index-info`
-   - メソッド: GET
-   - クエリパラメータ:
-     - `index_path`: インデックスのパス（省略可能）
-   - レスポンス:
-     ```json
-     {
-       "exists": true,
-       "path": "/path/to/index",
-       "index_file": "/path/to/index/index.faiss",
-       "index_pkl": "/path/to/index/index.pkl",
-       "index_file_size": 1024,
-       "index_pkl_size": 2048,
-       "document_count": 100,
-       "embedding_model": "model-name"
-     }
-     ```
+2. **get_index_info**
+   - 現在ロードされているベクトルデータベースインデックスの情報を取得します
+   - パラメータ:
+     - `index_path`: FAISSインデックスへのカスタムパス（オプション）
+   - 戻り値: インデックス情報を含む辞書
 
-3. **ヘルスチェックエンドポイント**
-   - URL: `/health`
-   - メソッド: GET
-   - レスポンス:
-     ```json
-     {
-       "status": "ok",
-       "version": "1.0.0"
-     }
-     ```
-
-詳細なAPI仕様ドキュメントは、以下のファイルで提供されています：
+詳細なAPI仕様は、以下のファイルで提供されています：
 - 日本語: [specs/apispec_ja.md](specs/apispec_ja.md)
 - 英語: [specs/apispec_en.md](specs/apispec_en.md)
+
+## Claude Desktop連携
+
+### Claude Desktopでの設定方法
+
+このMCPサーバーをClaude Desktopと連携して、ドキュメント検索機能を強化できます：
+
+1. **Claude Desktopのインストール**: [Anthropicのウェブサイト](https://www.anthropic.com/claude)からダウンロードしてインストールします
+
+2. **MCPサーバーの起動**:
+   ```bash
+   uv run python server.py
+   ```
+
+3. **Claude Desktopの設定**:
+   - Claude Desktopを開きます
+   - 設定（歯車アイコン）> 詳細設定 > MCPに移動します
+   - MCP連携を有効にします
+   - 以下の詳細でサーバーを追加します：
+     - 名前: OpenMMドキュメンテーション
+     - URL: http://localhost:8080
+   - 「追加」と「保存」をクリックします
+
+4. **Claudeでの使用方法**:
+   - Claude Desktopで新しい会話を開始します
+   - ClaudeがOpenMMドキュメントにアクセスできるようになります
+   - 「OpenMMのフォースフィールドパラメータの使い方を説明して」や「OpenMMで分子動力学シミュレーションをどのようにセットアップするか」といった質問ができます
+
+### Claude Desktop接続のトラブルシューティング
+
+Claude DesktopがMCPサーバーに接続できない場合：
+
+1. サーバーが実行中であることを確認します（`uv run python server.py`）
+2. URLがClaude Desktop設定に正しく入力されていることを確認します
+3. ファイアウォールが接続をブロックしていないことを確認します
+4. Claude Desktopの再起動を試みてください
 
 ## トラブルシューティング
 

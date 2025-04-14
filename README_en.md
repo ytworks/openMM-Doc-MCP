@@ -185,76 +185,63 @@ uv run -m pytest tests/test_server.py -v
 
 ## API Specification
 
-### Endpoints
+### MCP Integration
 
-This server provides the following API endpoints:
+This server implements the Model Context Protocol (MCP) and provides the following tools:
 
-1. **Search Endpoint**
-   - URL: `/query`
-   - Method: POST
-   - Request:
-     ```json
-     {
-       "query": "text to search for",
-       "top_k": 5,  // optional, default is 5
-       "index_path": "/path/to/index"  // optional
-     }
-     ```
-   - Response:
-     ```json
-     {
-       "query": "text to search for",
-       "results_count": 5,
-       "results": [
-         {
-           "content": "Document content...",
-           "metadata": {
-             "source": "filename"
-           },
-           "score": 0.95
-         },
-         // ...other results
-       ],
-       "metadata": {
-         "top_k": 5,
-         "index_path": "/path/to/index"
-       }
-     }
-     ```
+1. **search_documents**
+   - Searches for similar documents based on a query string
+   - Parameters:
+     - `query`: The search query text (required)
+     - `top_k`: Number of results to return (default 5)
+     - `index_path`: Optional custom path to FAISS index
+   - Returns: Dictionary containing search results with relevant document sections
 
-2. **Index Information Endpoint**
-   - URL: `/index-info`
-   - Method: GET
-   - Query Parameters:
-     - `index_path`: Path to the index (optional)
-   - Response:
-     ```json
-     {
-       "exists": true,
-       "path": "/path/to/index",
-       "index_file": "/path/to/index/index.faiss",
-       "index_pkl": "/path/to/index/index.pkl",
-       "index_file_size": 1024,
-       "index_pkl_size": 2048,
-       "document_count": 100,
-       "embedding_model": "model-name"
-     }
-     ```
-
-3. **Health Check Endpoint**
-   - URL: `/health`
-   - Method: GET
-   - Response:
-     ```json
-     {
-       "status": "ok",
-       "version": "1.0.0"
-     }
-     ```
+2. **get_index_info**
+   - Gets information about the currently loaded vector database index
+   - Parameters:
+     - `index_path`: Optional custom path to FAISS index
+   - Returns: Dictionary containing index information
 
 Detailed API specifications are available in the following files:
 - English: [specs/apispec_en.md](specs/apispec_en.md)
 - Japanese: [specs/apispec_ja.md](specs/apispec_ja.md)
+
+## Claude Desktop Integration
+
+### Setting up with Claude Desktop
+
+You can use this MCP server with Claude Desktop for enhanced document search capabilities:
+
+1. **Install Claude Desktop**: Download and install from [Anthropic's website](https://www.anthropic.com/claude)
+
+2. **Start the MCP Server**:
+   ```bash
+   uv run python server.py
+   ```
+
+3. **Configure Claude Desktop**:
+   - Open Claude Desktop
+   - Go to Settings (gear icon) > Advanced > MCP
+   - Enable MCP integration
+   - Add server with the following details:
+     - Name: OpenMM Documentation
+     - URL: http://localhost:8080
+   - Click "Add" and "Save"
+
+4. **Using with Claude**:
+   - Start a new conversation in Claude Desktop
+   - Claude will now have access to OpenMM documentation
+   - Ask questions like "Explain how to use OpenMM's force field parameters" or "How do I set up a molecular dynamics simulation in OpenMM?"
+
+### Troubleshooting Claude Desktop Connection
+
+If Claude Desktop cannot connect to the MCP server:
+
+1. Verify the server is running (`uv run python server.py`)
+2. Check that the URL is correctly entered in Claude Desktop settings
+3. Ensure no firewall is blocking the connection
+4. Try restarting Claude Desktop
 
 ## Troubleshooting
 
